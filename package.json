@@ -1,8 +1,8 @@
 {
   "name": "acciones",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Sistema Backend para gestión de portafolio bursátil enfocado en la Bolsa de Valores de Caracas (BVC), tasas de cambio (BCV, Binance USDT) y control de custodia",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
@@ -11,9 +11,23 @@
     "prisma:migrate": "prisma migrate dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "bvc",
+    "bolsa-de-valores-de-caracas",
+    "bcv",
+    "binance-p2p",
+    "portfolio-tracker",
+    "typescript",
+    "express",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "josepernalete2",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josepernalete2/acciones.git"
+  },
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.19.3",
