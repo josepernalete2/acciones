@@ -131,6 +131,12 @@ npm run seed
 - `GET /api/bvc/assets/:ticker/history?limit=30` - Obtiene el historial cronológico de cotizaciones para un ticker específico (ej. `BPV`, `BVL`, `ABC.A`).
 - `POST /api/bvc/quotes/sync` - Ingesta y sincroniza en tiempo real las cotizaciones de la jornada bursátil de la BVC.
 
+### Gestión de Portafolio y Transacciones (`/api/portfolio`)
+- `POST /api/portfolio/transactions` - Registra una compra (`BUY`) o venta (`SELL`) con cálculo automático de comisiones y contravalor en USD según tasa BCV.
+- `GET /api/portfolio/transactions?userId=USER_ID&ticker=BPV` - Historial cronológico de transacciones.
+- `POST /api/portfolio/custody` - Actualiza la auditoría de títulos en custodia de la Caja Venezolana de Valores (CVV).
+- `GET /api/portfolio/summary?userId=USER_ID` - Consolidado de cartera: posición neta, precio promedio ponderado, valor actual de mercado, P&L latente en USD y descuadre de custodia CVV.
+
 #### Ejemplo de respuesta de sincronización (`POST /api/rates/sync`):
 ```json
 {
