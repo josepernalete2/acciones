@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MarketType {
+  BVC
+  US
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+enum Currency {
+  VES
+  USD
+  USDT
+}
+
+model Asset {
+  id           String          @id @default(uuid())
+  ticker       String          @unique
+  name         String
+  market       MarketType      @default(BVC)
+  baseCurrency Currency        @default(VES)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  dailyQuotes  DailyQuote[]
+  transactions Transaction[]
+
+  @@map("assets")
+}
+
+model ExchangeRate {
+  id                String    @id @default(uuid())
+  rateDate          DateTime  @unique @db.Date
+  bcvUsd            Decimal   @db.Decimal(12, 4)
+  binanceP2pUsd     Decimal?  @db.Decimal(12, 4)
+  parallelUsd       Decimal?  @db.Decimal(12, 4)
+  spreadBcvParalelo Decimal?  @db.Decimal(8, 4)
+  createdAt         DateTime  @default(now())
+
+  @@map("exchange_rates")
+}
+
+model DailyQuote {
+  id           String    @id @default(uuid())
+  assetId      String
+  quoteDate    DateTime  @db.Date
+  closingPrice Decimal   @db.Decimal(16, 4)
+  volumeTitles Decimal?  @db.Decimal(16, 2)
+  volumeCash   Decimal?  @db.Decimal(18, 2)
+  variationPct Decimal?  @db.Decimal(8, 4)
+
+  asset        Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, quoteDate])
+  @@map("daily_quotes")
+}
+
+model Transaction {
+  id               String          @id @default(uuid())
+  userId           String
+  assetId          String
+  type             TransactionType
+  operationDate    DateTime        @db.Date
+  sharesCount      Decimal         @db.Decimal(14, 4)
+  pricePerShareVes Decimal         @db.Decimal(16, 4)
+  totalAmountVes   Decimal         @db.Decimal(18, 4)
+  bcvRateUsed      Decimal         @db.Decimal(12, 4)
+  pricePerShareUsd Decimal         @db.Decimal(14, 4)
+  totalAmountUsd   Decimal         @db.Decimal(16, 4)
+  brokerFeeVes     Decimal         @default(0) @db.Decimal(14, 4)
+  cvvFeeVes        Decimal         @default(0) @db.Decimal(14, 4)
+  brokerName       String?
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  asset            Asset           @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@map("transactions")
+}
+
+model CustodyHolding {
+  id            String   @id @default(uuid())
+  userId        String
+  assetId       String
+  cvvShares     Decimal  @db.Decimal(14, 4)
+  lastAuditDate DateTime @db.Date
+
+  @@unique([userId, assetId])
+  @@map("custody_holdings")
+}
