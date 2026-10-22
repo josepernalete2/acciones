@@ -137,6 +137,12 @@ npm run seed
 - `POST /api/portfolio/custody` - Actualiza la auditoría de títulos en custodia de la Caja Venezolana de Valores (CVV).
 - `GET /api/portfolio/summary?userId=USER_ID` - Consolidado de cartera: posición neta, precio promedio ponderado, valor actual de mercado, P&L latente en USD y descuadre de custodia CVV.
 
+### Control de Gastos Multimoneda y Flujo de Caja (`/api/cashflow`)
+- `POST /api/cashflow/expenses` - Registra un gasto en VES, USD o USDT con conversión automática a contravalores oficiales y paralelos según la fecha.
+- `GET /api/cashflow/expenses?userId=USER_ID&category=BROKER_FEE&currency=VES` - Listado cronológico de gastos con filtros opcionales de fecha, categoría y moneda.
+- `GET /api/cashflow/expenses/summary?userId=USER_ID&from=YYYY-MM-DD&to=YYYY-MM-DD` - Resumen consolidado: total gastado en USD y VES, distribución porcentual por categoría y desglose por moneda original.
+- `DELETE /api/cashflow/expenses/:id` - Elimina un gasto verificando pertenencia al usuario.
+
 #### Ejemplo de respuesta de sincronización (`POST /api/rates/sync`):
 ```json
 {

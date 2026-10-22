@@ -23,6 +23,15 @@ enum Currency {
   USDT
 }
 
+enum ExpenseCategory {
+  BROKER_FEE
+  CVV_CUSTODY
+  TAX_IGTF
+  SUBSCRIPTION
+  OPERATIONAL
+  PERSONAL
+}
+
 model Asset {
   id           String          @id @default(uuid())
   ticker       String          @unique
@@ -99,4 +108,26 @@ model CustodyHolding {
 
   @@unique([userId, assetId])
   @@map("custody_holdings")
+}
+
+model Expense {
+  id                    String          @id @default(uuid())
+  userId                String
+  expenseDate           DateTime        @db.Date
+  description           String
+  category              ExpenseCategory
+  originalCurrency      Currency
+  originalAmount        Decimal         @db.Decimal(16, 4)
+  bcvRateUsed           Decimal         @db.Decimal(12, 4)
+  binanceRateUsed       Decimal?        @db.Decimal(12, 4)
+  equivalentVes         Decimal         @db.Decimal(16, 4)
+  equivalentBcvUsd      Decimal         @db.Decimal(16, 4)
+  equivalentBinanceUsdt Decimal?        @db.Decimal(16, 4)
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([userId, expenseDate])
+  @@index([category])
+  @@map("expenses")
 }
