@@ -88,10 +88,11 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bvc_portfolio?schema
 CORS_ORIGIN="*"
 ```
 
-### 4. Generar cliente de Prisma y ejecutar migraciones
+### 4. Generar cliente de Prisma, ejecutar migraciones y sembrar catálogo inicial
 ```bash
 npm run prisma:generate
 npm run prisma:migrate
+npm run seed
 ```
 
 ---
@@ -124,6 +125,11 @@ npm run prisma:migrate
 - `GET /api/rates/latest` - Retorna el último registro de tasas cambiarias almacenado.
 - `GET /api/rates/history?from=YYYY-MM-DD&to=YYYY-MM-DD` - Consulta el historial de tasas filtrado por rango de fechas.
 - `POST /api/rates/sync` - Ejecuta la sincronización en vivo (BCV + Binance P2P) y guarda el registro del día.
+
+### Catálogo de Acciones BVC y Cotizaciones (`/api/bvc`)
+- `GET /api/bvc/assets` - Lista todos los activos BVC con su última cotización y precio equivalente en USD calculado con la última tasa oficial BCV.
+- `GET /api/bvc/assets/:ticker/history?limit=30` - Obtiene el historial cronológico de cotizaciones para un ticker específico (ej. `BPV`, `BVL`, `ABC.A`).
+- `POST /api/bvc/quotes/sync` - Ingesta y sincroniza en tiempo real las cotizaciones de la jornada bursátil de la BVC.
 
 #### Ejemplo de respuesta de sincronización (`POST /api/rates/sync`):
 ```json
