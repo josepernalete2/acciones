@@ -10,6 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "ts-node --transpile-only prisma/seed.ts",
+    "client:dev": "npm --prefix frontend run dev",
+    "client:build": "npm --prefix frontend run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prisma": {

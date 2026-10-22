@@ -99,19 +99,29 @@ npm run seed
 
 ## 💻 Ejecución
 
-- **Modo Desarrollo (con recarga en vivo):**
+### 1. Backend (Node.js & Express)
+- **Modo Desarrollo (con recarga en vivo en puerto 3000):**
   ```bash
   npm run dev
   ```
-
-- **Compilar proyecto (TypeScript a JavaScript):**
+- **Compilar backend:**
   ```bash
   npm run build
   ```
-
 - **Modo Producción:**
   ```bash
   npm start
+  ```
+
+### 2. Frontend (React 19, Vite & Tailwind CSS)
+- **Modo Desarrollo (en http://localhost:5173):**
+  ```bash
+  npm run client:dev
+  # o directamente en la carpeta: cd frontend && npm run dev
+  ```
+- **Compilar frontend para producción:**
+  ```bash
+  npm run client:build
   ```
 
 ---
