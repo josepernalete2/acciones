@@ -114,7 +114,7 @@ npm run seed
   ```
 
 ### 2. Frontend (React 19, Vite & Tailwind CSS)
-- **Modo Desarrollo (en http://localhost:5173):**
+- **Modo Desarrollo (en http://localhost:5175):**
   ```bash
   npm run client:dev
   # o directamente en la carpeta: cd frontend && npm run dev
