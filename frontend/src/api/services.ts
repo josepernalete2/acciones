@@ -53,6 +53,16 @@ export const portfolioService = {
     });
     return response.data.data;
   },
+
+  importExcelPortfolio: async (file: File, userId: string): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId);
+    const response = await apiClient.post('/portfolio/import-excel', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };
 
 export const expenseService = {

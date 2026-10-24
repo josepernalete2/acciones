@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Briefcase, Receipt, PlusCircle, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Receipt, PlusCircle, ShieldCheck, FileSpreadsheet } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'portfolio' | 'expenses';
 
@@ -8,6 +8,7 @@ interface SidebarProps {
   onTabChange: (tab: NavTab) => void;
   onOpenTransactionModal: () => void;
   onOpenExpenseModal: () => void;
+  onOpenImportModal: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -15,6 +16,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onTabChange,
   onOpenTransactionModal,
   onOpenExpenseModal,
+  onOpenImportModal,
 }) => {
   const navItems = [
     {
@@ -91,6 +93,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Receipt className="h-4 w-4 text-amber-400" />
             Registrar Gasto
+          </button>
+          <button
+            onClick={onOpenImportModal}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 hover:text-white active:scale-[0.98]"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
+            📥 Importar Excel Solfin
           </button>
         </div>
 

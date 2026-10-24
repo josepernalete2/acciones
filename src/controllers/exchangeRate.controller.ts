@@ -9,7 +9,13 @@ export class ExchangeRateController {
    */
   static async getLatest(_req: Request, res: Response) {
     try {
-      const latest = await ExchangeRateService.getLatestRate();
+      let latest = await ExchangeRateService.getLatestRate();
+
+      // Robustecimiento: si no hay tasas previas en la BD, sincronizar automáticamente
+      if (!latest) {
+        console.log('[ExchangeRateController.getLatest] No hay tasas en BD. Sincronizando automáticamente...');
+        latest = await ExchangeRateService.syncDailyRates();
+      }
 
       if (!latest) {
         return sendError(res, 'No se encontraron tasas cambiarias registradas en el sistema', 404);

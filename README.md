@@ -146,6 +146,7 @@ npm run seed
 - `GET /api/portfolio/transactions?userId=USER_ID&ticker=BPV` - Historial cronológico de transacciones.
 - `POST /api/portfolio/custody` - Actualiza la auditoría de títulos en custodia de la Caja Venezolana de Valores (CVV).
 - `GET /api/portfolio/summary?userId=USER_ID` - Consolidado de cartera: posición neta, precio promedio ponderado, valor actual de mercado, P&L latente en USD y descuadre de custodia CVV.
+- `POST /api/portfolio/import-excel` - Importación masiva automática desde libros de Excel de Solfin (pestañas 'PRECIO - VOLUMEN' para custodia CVV y 'COMPRAS VENTA' para bloques de transacciones históricas).
 
 ### Control de Gastos Multimoneda y Flujo de Caja (`/api/cashflow`)
 - `POST /api/cashflow/expenses` - Registra un gasto en VES, USD o USDT con conversión automática a contravalores oficiales y paralelos según la fecha.

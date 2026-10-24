@@ -7,6 +7,7 @@ import { PortfolioView } from './views/PortfolioView';
 import { ExpensesView } from './views/ExpensesView';
 import { TransactionModal } from './components/TransactionModal';
 import { ExpenseModal } from './components/ExpenseModal';
+import { ImportExcelModal } from './components/ImportExcelModal';
 import {
   exchangeRateService,
   portfolioService,
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(
     null
   );
@@ -133,6 +135,7 @@ export const App: React.FC = () => {
           onTabChange={setCurrentTab}
           onOpenTransactionModal={() => setIsTransactionModalOpen(true)}
           onOpenExpenseModal={() => setIsExpenseModalOpen(true)}
+          onOpenImportModal={() => setIsImportModalOpen(true)}
         />
 
         {/* Content Area */}
@@ -189,6 +192,16 @@ export const App: React.FC = () => {
           loadData();
         }}
         rates={rates}
+        userId={userId}
+      />
+
+      <ImportExcelModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          showToast('Portafolio y custodia importados desde Excel exitosamente');
+          loadData();
+        }}
         userId={userId}
       />
     </div>
