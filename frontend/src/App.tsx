@@ -8,11 +8,13 @@ import { ExpensesView } from './views/ExpensesView';
 import { TransactionModal } from './components/TransactionModal';
 import { ExpenseModal } from './components/ExpenseModal';
 import { ImportExcelModal } from './components/ImportExcelModal';
+import { DividendModal } from './components/DividendModal';
 import {
   exchangeRateService,
   portfolioService,
   expenseService,
   bvcService,
+  reportService,
 } from './api/services';
 import type {
   ExchangeRateData,
@@ -36,6 +38,7 @@ export const App: React.FC = () => {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDividendModalOpen, setIsDividendModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(
     null
   );
@@ -105,6 +108,16 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleExportReport = async (format: 'pdf' | 'excel') => {
+    try {
+      showToast(`Generando reporte ${format.toUpperCase()}...`);
+      await reportService.downloadPortfolioReport(userId, format);
+      showToast(`Reporte ${format.toUpperCase()} descargado exitosamente`);
+    } catch (err: any) {
+      showToast(err.message || `Error al exportar reporte ${format.toUpperCase()}`, 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Toast Notification */}
@@ -125,6 +138,7 @@ export const App: React.FC = () => {
         loadingRates={loading}
         onSyncRates={handleSyncRates}
         isSyncing={isSyncing}
+        onExportReport={handleExportReport}
       />
 
       {/* Main Body */}
@@ -136,6 +150,8 @@ export const App: React.FC = () => {
           onOpenTransactionModal={() => setIsTransactionModalOpen(true)}
           onOpenExpenseModal={() => setIsExpenseModalOpen(true)}
           onOpenImportModal={() => setIsImportModalOpen(true)}
+          onOpenDividendModal={() => setIsDividendModalOpen(true)}
+          onExportReport={handleExportReport}
         />
 
         {/* Content Area */}
@@ -202,6 +218,18 @@ export const App: React.FC = () => {
           showToast('Portafolio y custodia importados desde Excel exitosamente');
           loadData();
         }}
+        userId={userId}
+      />
+
+      <DividendModal
+        isOpen={isDividendModalOpen}
+        onClose={() => setIsDividendModalOpen(false)}
+        onSuccess={() => {
+          showToast('Dividendo registrado exitosamente');
+          loadData();
+        }}
+        assets={assets}
+        rates={rates}
         userId={userId}
       />
     </div>

@@ -8,6 +8,8 @@ import type {
   CreateExpensePayload,
   AssetQuote,
   ExpenseItem,
+  CreateDividendPayload,
+  DividendItem,
 } from '../types';
 
 export const exchangeRateService = {
@@ -96,3 +98,48 @@ export const expenseService = {
     return response.data.data;
   },
 };
+
+export const dividendService = {
+  registerDividend: async (data: CreateDividendPayload): Promise<DividendItem> => {
+    const response = await apiClient.post<ApiResponse<DividendItem>>('/dividends', data);
+    return response.data.data;
+  },
+
+  getDividends: async (userId: string, assetId?: string): Promise<DividendItem[]> => {
+    const response = await apiClient.get<ApiResponse<DividendItem[]>>('/dividends', {
+      params: { userId, assetId },
+    });
+    return response.data.data;
+  },
+};
+
+export const reportService = {
+  downloadPortfolioReport: async (userId: string, format: 'pdf' | 'excel'): Promise<void> => {
+    const endpoint = `/reports/portfolio/${format}`;
+    const response = await apiClient.get(endpoint, {
+      params: { userId },
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], {
+      type:
+        format === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.download =
+      format === 'pdf'
+        ? `Estado_Cuenta_${userId}_${dateStr}.pdf`
+        : `Portafolio_BVC_${userId}_${dateStr}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+};
+

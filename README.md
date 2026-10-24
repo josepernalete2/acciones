@@ -154,6 +154,14 @@ npm run seed
 - `GET /api/cashflow/expenses/summary?userId=USER_ID&from=YYYY-MM-DD&to=YYYY-MM-DD` - Resumen consolidado: total gastado en USD y VES, distribución porcentual por categoría y desglose por moneda original.
 - `DELETE /api/cashflow/expenses/:id` - Elimina un gasto verificando pertenencia al usuario.
 
+### Gestión de Dividendos Bursátiles (`/api/dividends`)
+- `POST /api/dividends` - Registra un dividendo en acciones liberadas (`SHARES`) o en efectivo (`CASH_VES` / `CASH_USD`) con cálculo automático de retenciones ISLR, contravalor USD y ajuste del costo promedio ponderado.
+- `GET /api/dividends?userId=USER_ID&assetId=ASSET_ID` - Historial de dividendos cobrados por activo y usuario.
+
+### Exportación de Reportes Financieros (`/api/reports`)
+- `GET /api/reports/portfolio/excel?userId=USER_ID` - Genera y descarga el libro de Excel (.xlsx) estructurado con posiciones, rendimientos, tasas, custodia CVV y dividendos.
+- `GET /api/reports/portfolio/pdf?userId=USER_ID` - Genera y descarga el estado de cuenta formal en PDF con membrete corporativo, tabla ejecutiva de posiciones y resumen consolidado.
+
 #### Ejemplo de respuesta de sincronización (`POST /api/rates/sync`):
 ```json
 {

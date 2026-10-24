@@ -1,5 +1,16 @@
-import React from 'react';
-import { LayoutDashboard, Briefcase, Receipt, PlusCircle, ShieldCheck, FileSpreadsheet } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  LayoutDashboard,
+  Briefcase,
+  Receipt,
+  PlusCircle,
+  ShieldCheck,
+  FileSpreadsheet,
+  Gift,
+  Download,
+  FileText,
+  ChevronDown,
+} from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'portfolio' | 'expenses';
 
@@ -9,6 +20,8 @@ interface SidebarProps {
   onOpenTransactionModal: () => void;
   onOpenExpenseModal: () => void;
   onOpenImportModal: () => void;
+  onOpenDividendModal: () => void;
+  onExportReport: (format: 'pdf' | 'excel') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -17,7 +30,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenTransactionModal,
   onOpenExpenseModal,
   onOpenImportModal,
+  onOpenDividendModal,
+  onExportReport,
 }) => {
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const navItems = [
     {
       id: 'dashboard' as NavTab,
@@ -95,12 +111,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Registrar Gasto
           </button>
           <button
+            onClick={onOpenDividendModal}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs font-semibold text-indigo-300 transition-all hover:bg-indigo-500/20 hover:text-white active:scale-[0.98]"
+          >
+            <Gift className="h-4 w-4 text-indigo-400" />
+            Registrar Dividendo
+          </button>
+          <button
             onClick={onOpenImportModal}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 hover:text-white active:scale-[0.98]"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
             📥 Importar Excel Solfin
           </button>
+
+          {/* Export Report Dropdown */}
+          <div className="relative pt-1 border-t border-slate-800/80">
+            <button
+              onClick={() => setIsExportOpen(!isExportOpen)}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-xs font-semibold text-slate-200 transition-all hover:bg-slate-800 hover:text-white active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-2">
+                <Download className="h-4 w-4 text-sky-400" />
+                Exportar Reporte
+              </div>
+              <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isExportOpen && (
+              <div className="mt-1.5 flex flex-col gap-1 rounded-xl border border-slate-700/80 bg-slate-900/95 p-1.5 shadow-xl">
+                <button
+                  onClick={() => {
+                    onExportReport('pdf');
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-rose-500/20 hover:text-rose-300 transition-colors text-left"
+                >
+                  <FileText className="h-3.5 w-3.5 text-rose-400" />
+                  Estado de Cuenta (PDF)
+                </button>
+                <button
+                  onClick={() => {
+                    onExportReport('excel');
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors text-left"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />
+                  Balance Posiciones (Excel)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Custody Info Badge */}

@@ -32,6 +32,12 @@ enum ExpenseCategory {
   PERSONAL
 }
 
+enum DividendType {
+  SHARES
+  CASH_VES
+  CASH_USD
+}
+
 model Asset {
   id           String          @id @default(uuid())
   ticker       String          @unique
@@ -44,6 +50,7 @@ model Asset {
 
   dailyQuotes  DailyQuote[]
   transactions Transaction[]
+  dividends    Dividend[]
 
   @@map("assets")
 }
@@ -130,4 +137,27 @@ model Expense {
   @@index([userId, expenseDate])
   @@index([category])
   @@map("expenses")
+}
+
+model Dividend {
+  id              String       @id @default(uuid())
+  userId          String
+  assetId         String
+  type            DividendType
+  declarationDate DateTime     @db.Date
+  paymentDate     DateTime     @db.Date
+  sharesReceived  Decimal?     @db.Decimal(14, 4)
+  grossAmount     Decimal?     @db.Decimal(18, 4)
+  taxWithheld     Decimal?     @default(0) @db.Decimal(14, 4)
+  netAmount       Decimal?     @db.Decimal(18, 4)
+  bcvRateUsed     Decimal?     @db.Decimal(12, 4)
+  netAmountUsd    Decimal?     @db.Decimal(16, 4)
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  asset           Asset        @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@index([userId, paymentDate])
+  @@map("dividends")
 }

@@ -1,6 +1,6 @@
 import { Decimal } from 'decimal.js';
 import prisma from '../config/prisma';
-import { TransactionType } from '@prisma/client';
+import { TransactionType, DividendType } from '@prisma/client';
 import { ExchangeRateService } from './exchangeRate.service';
 
 export interface CreateTransactionDTO {
@@ -29,6 +29,8 @@ export interface AssetPositionSummary {
   name: string;
   totalSharesBought: string;
   totalSharesSold: string;
+  totalDividendShares: string;
+  totalDividendsCollectedUsd: string;
   currentShares: string;
   totalInvestedUsd: string;
   averageBuyPriceUsd: string;
@@ -48,6 +50,7 @@ export interface PortfolioSummaryResponse {
   totalPortfolioValueUsd: string;
   totalPortfolioValueVes: string;
   totalInvestedUsd: string;
+  totalDividendsCollectedUsd: string;
   totalPnlUsd: string;
   totalPnlPct: string;
   bcvRateUsed: string | null;
@@ -251,19 +254,50 @@ export class PortfolioService {
       orderBy: { operationDate: 'asc' },
     });
 
-    // 2. Obtener auditorías de custodia CVV registradas para el usuario
+    // 2. Obtener dividendos registrados para el usuario
+    const dividends = await prisma.dividend.findMany({
+      where: { userId },
+      include: { asset: true },
+      orderBy: { paymentDate: 'asc' },
+    });
+
+    let totalDividendsCollectedUsdGlobal = new Decimal(0);
+    const dividendMap = new Map<string, { totalShares: Decimal; totalCashUsd: Decimal; asset: any }>();
+
+    for (const div of dividends) {
+      if (div.netAmountUsd) {
+        totalDividendsCollectedUsdGlobal = totalDividendsCollectedUsdGlobal.plus(
+          new Decimal(div.netAmountUsd.toString())
+        );
+      }
+      if (!dividendMap.has(div.assetId)) {
+        dividendMap.set(div.assetId, {
+          totalShares: new Decimal(0),
+          totalCashUsd: new Decimal(0),
+          asset: div.asset,
+        });
+      }
+      const entry = dividendMap.get(div.assetId)!;
+      if (div.type === DividendType.SHARES && div.sharesReceived) {
+        entry.totalShares = entry.totalShares.plus(new Decimal(div.sharesReceived.toString()));
+      } else if (div.netAmountUsd) {
+        entry.totalCashUsd = entry.totalCashUsd.plus(new Decimal(div.netAmountUsd.toString()));
+      }
+    }
+
+    // 3. Obtener auditorías de custodia CVV registradas para el usuario
     const custodyRecords = await prisma.custodyHolding.findMany({
       where: { userId },
     });
     const custodyMap = new Map(custodyRecords.map((c) => [c.assetId, new Decimal(c.cvvShares.toString())]));
 
-    // 3. Obtener la tasa oficial BCV más reciente
+    // 4. Obtener la tasa oficial BCV más reciente
     const latestRateRecord = await ExchangeRateService.getLatestRate();
     const currentBcvRate = latestRateRecord?.bcvUsd
       ? new Decimal(latestRateRecord.bcvUsd.toString())
       : null;
 
-    // 4. Agrupar transacciones por activo
+    // 5. Agrupar transacciones por activo
     const grouped = new Map<string, { asset: any; transactions: typeof transactions }>();
 
     for (const tx of transactions) {
@@ -273,16 +307,16 @@ export class PortfolioService {
       grouped.get(tx.assetId)!.transactions.push(tx);
     }
 
-    // 5. Para cada activo, obtener la última cotización diaria
-    const assetIds = Array.from(grouped.keys());
+    // 6. Obtener cotizaciones para todos los activos con transacciones o dividendos
+    const allAssetIds = Array.from(new Set([...grouped.keys(), ...dividendMap.keys()]));
     const latestQuotes = await prisma.dailyQuote.findMany({
-      where: { assetId: { in: assetIds } },
+      where: { assetId: { in: allAssetIds } },
       orderBy: { quoteDate: 'desc' },
       distinct: ['assetId'],
     });
     const quoteMap = new Map(latestQuotes.map((q) => [q.assetId, q]));
 
-    // 6. Calcular posiciones individuales
+    // 7. Calcular posiciones individuales
     let totalPortfolioValueUsd = new Decimal(0);
     let totalPortfolioValueVes = new Decimal(0);
     let totalInvestedUsdGlobal = new Decimal(0);
@@ -293,6 +327,8 @@ export class PortfolioService {
       name: string;
       totalSharesBought: Decimal;
       totalSharesSold: Decimal;
+      totalDividendShares: Decimal;
+      totalDividendsCollectedUsd: Decimal;
       currentShares: Decimal;
       totalInvestedUsd: Decimal;
       averageBuyPriceUsd: Decimal;
@@ -308,28 +344,41 @@ export class PortfolioService {
 
     const tempPositions: TempPosition[] = [];
 
-    for (const [assetId, group] of grouped.entries()) {
+    for (const assetId of allAssetIds) {
+      const group = grouped.get(assetId);
+      const divEntry = dividendMap.get(assetId);
+      const asset = group ? group.asset : divEntry?.asset;
+      if (!asset) continue;
+
       let totalSharesBought = new Decimal(0);
       let totalSharesSold = new Decimal(0);
       let totalBoughtUsd = new Decimal(0);
 
-      for (const tx of group.transactions) {
-        const count = new Decimal(tx.sharesCount.toString());
-        const amountUsd = new Decimal(tx.totalAmountUsd.toString());
+      if (group) {
+        for (const tx of group.transactions) {
+          const count = new Decimal(tx.sharesCount.toString());
+          const amountUsd = new Decimal(tx.totalAmountUsd.toString());
 
-        if (tx.type === TransactionType.BUY) {
-          totalSharesBought = totalSharesBought.plus(count);
-          totalBoughtUsd = totalBoughtUsd.plus(amountUsd);
-        } else if (tx.type === TransactionType.SELL) {
-          totalSharesSold = totalSharesSold.plus(count);
+          if (tx.type === TransactionType.BUY) {
+            totalSharesBought = totalSharesBought.plus(count);
+            totalBoughtUsd = totalBoughtUsd.plus(amountUsd);
+          } else if (tx.type === TransactionType.SELL) {
+            totalSharesSold = totalSharesSold.plus(count);
+          }
         }
       }
 
-      const currentShares = totalSharesBought.minus(totalSharesSold);
+      const totalDividendShares = divEntry ? divEntry.totalShares : new Decimal(0);
+      const totalDividendsCollectedUsd = divEntry ? divEntry.totalCashUsd : new Decimal(0);
 
-      // Precio Promedio Ponderado de compra en USD: averageBuyPriceUsd = totalBoughtUsd / totalSharesBought
-      const averageBuyPriceUsd = totalSharesBought.greaterThan(0)
-        ? totalBoughtUsd.dividedBy(totalSharesBought).toDecimalPlaces(4)
+      // currentShares = totalBought + totalDividendShares - totalSold
+      const currentShares = totalSharesBought.plus(totalDividendShares).minus(totalSharesSold);
+
+      // Precio Promedio Ponderado ajustado por acciones liberadas:
+      // averageBuyPriceUsd = totalInvestedUsd / (totalSharesBought + totalDividendShares)
+      const totalBoughtPlusDividends = totalSharesBought.plus(totalDividendShares);
+      const averageBuyPriceUsd = totalBoughtPlusDividends.greaterThan(0)
+        ? totalBoughtUsd.dividedBy(totalBoughtPlusDividends).toDecimalPlaces(4)
         : new Decimal(0);
 
       // Inversión correspondiente a las acciones abiertas actualmente
@@ -374,10 +423,12 @@ export class PortfolioService {
 
       tempPositions.push({
         assetId,
-        ticker: group.asset.ticker,
-        name: group.asset.name,
+        ticker: asset.ticker,
+        name: asset.name,
         totalSharesBought,
         totalSharesSold,
+        totalDividendShares,
+        totalDividendsCollectedUsd,
         currentShares,
         totalInvestedUsd: positionCostUsd,
         averageBuyPriceUsd,
@@ -392,7 +443,7 @@ export class PortfolioService {
       });
     }
 
-    // 7. Calcular asignación porcentual de cada activo y formatear salida
+    // 8. Calcular asignación porcentual de cada activo y formatear salida
     const positions: AssetPositionSummary[] = tempPositions.map((p) => {
       const allocationPct = totalPortfolioValueUsd.greaterThan(0)
         ? p.currentValueUsd.dividedBy(totalPortfolioValueUsd).times(100).toDecimalPlaces(2)
@@ -404,6 +455,8 @@ export class PortfolioService {
         name: p.name,
         totalSharesBought: p.totalSharesBought.toFixed(4),
         totalSharesSold: p.totalSharesSold.toFixed(4),
+        totalDividendShares: p.totalDividendShares.toFixed(4),
+        totalDividendsCollectedUsd: p.totalDividendsCollectedUsd.toFixed(4),
         currentShares: p.currentShares.toFixed(4),
         totalInvestedUsd: p.totalInvestedUsd.toFixed(4),
         averageBuyPriceUsd: p.averageBuyPriceUsd.toFixed(4),
@@ -429,6 +482,7 @@ export class PortfolioService {
       totalPortfolioValueUsd: totalPortfolioValueUsd.toFixed(4),
       totalPortfolioValueVes: totalPortfolioValueVes.toFixed(4),
       totalInvestedUsd: totalInvestedUsdGlobal.toFixed(4),
+      totalDividendsCollectedUsd: totalDividendsCollectedUsdGlobal.toFixed(4),
       totalPnlUsd: totalPnlUsd.toFixed(4),
       totalPnlPct: `${totalPnlPct.toFixed(2)}%`,
       bcvRateUsed: currentBcvRate ? currentBcvRate.toFixed(4) : null,

@@ -42,6 +42,8 @@ export interface PortfolioPosition {
   name: string;
   totalSharesBought: string;
   totalSharesSold: string;
+  totalDividendShares?: string;
+  totalDividendsCollectedUsd?: string;
   currentShares: string;
   totalInvestedUsd: string;
   averageBuyPriceUsd: string;
@@ -61,6 +63,7 @@ export interface PortfolioSummary {
   totalPortfolioValueUsd: string;
   totalPortfolioValueVes: string;
   totalInvestedUsd: string;
+  totalDividendsCollectedUsd?: string;
   totalPnlUsd: string;
   totalPnlPct: string;
   bcvRateUsed: string | null;
@@ -133,5 +136,41 @@ export interface CreateExpensePayload {
   category: string;
   originalCurrency: 'VES' | 'USD' | 'USDT';
   originalAmount: number | string;
+  notes?: string;
+}
+
+export type DividendType = 'SHARES' | 'CASH_VES' | 'CASH_USD';
+
+export interface DividendItem {
+  id: string;
+  userId: string;
+  assetId: string;
+  type: DividendType;
+  declarationDate: string;
+  paymentDate: string;
+  sharesReceived?: string | null;
+  grossAmount?: string | null;
+  taxWithheld?: string | null;
+  netAmount?: string | null;
+  bcvRateUsed?: string | null;
+  netAmountUsd?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  asset: {
+    id: string;
+    ticker: string;
+    name: string;
+  };
+}
+
+export interface CreateDividendPayload {
+  userId: string;
+  ticker: string;
+  type: DividendType;
+  declarationDate: string;
+  paymentDate: string;
+  sharesReceived?: number | string;
+  grossAmount?: number | string;
+  taxWithheld?: number | string;
   notes?: string;
 }

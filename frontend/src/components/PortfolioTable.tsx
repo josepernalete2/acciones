@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowUpRight, ArrowDownRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Search, ArrowUpRight, ArrowDownRight, ShieldCheck, AlertCircle, Gift } from 'lucide-react';
 import type { PortfolioPosition } from '../types';
 
 interface PortfolioTableProps {
@@ -80,6 +80,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ positions, onOpe
                 const isPositive = pnlNumber >= 0;
                 const custodyDiff = parseFloat(pos.custodyDifference);
                 const isCustodyOk = custodyDiff === 0;
+                const divShares = parseFloat(pos.totalDividendShares || '0');
 
                 return (
                   <tr
@@ -93,7 +94,15 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ positions, onOpe
                           {pos.ticker.slice(0, 3)}
                         </div>
                         <div>
-                          <p className="font-bold text-white">{pos.ticker}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-white">{pos.ticker}</p>
+                            {divShares > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded-md border border-indigo-500/30 bg-indigo-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-300">
+                                <Gift className="h-2.5 w-2.5" />
+                                Liberadas
+                              </span>
+                            )}
+                          </div>
                           <p className="max-w-[180px] truncate text-[11px] text-slate-400">
                             {pos.name}
                           </p>
@@ -102,8 +111,15 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ positions, onOpe
                     </td>
 
                     {/* Shares */}
-                    <td className="px-5 py-4 text-right font-medium text-slate-200">
-                      {parseFloat(pos.currentShares).toLocaleString()}
+                    <td className="px-5 py-4 text-right">
+                      <p className="font-medium text-slate-200">
+                        {parseFloat(pos.currentShares).toLocaleString()}
+                      </p>
+                      {divShares > 0 && (
+                        <p className="text-[10px] text-indigo-400 font-medium flex items-center justify-end gap-1">
+                          +{divShares.toLocaleString()} liberadas
+                        </p>
+                      )}
                     </td>
 
                     {/* PPP USD */}
